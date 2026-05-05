@@ -938,13 +938,13 @@ def get_documents():
     try:
         cursor.execute("""
             SELECT d.doc_id, d.title, d.file_name, d.content_length, d.summary,
-                   d.created_at, d.category, d.jurisdiction,
+                   d.upload_date, d.category, d.jurisdiction,
                    dt.type_name, l.language_name
             FROM DOCUMENTS d
             JOIN DOCUMENT_TYPE dt ON dt.type_id = d.file_type_id
             JOIN LANGUAGE l ON l.language_id = d.language_id
             WHERE d.owner_id = %(user_id)s OR d.owner_id IS NULL
-            ORDER BY d.created_at DESC
+            ORDER BY d.upload_date DESC
         """, {'user_id': g.user_id})
         rows = cursor.fetchall()
 
