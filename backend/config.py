@@ -30,12 +30,10 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max
 MAX_KEYWORD_LENGTH = 100
 ALLOWED_KEYWORD_PATTERN = r'^[a-zA-Z0-9\s\-_\.,\(\)\[\]]+$'
 
-# SMTP Configuration (Gmail)
+# SMTP Configuration (SendGrid Bypass for Render)
 SMTP_CONFIG = {
     'SENDER_EMAIL': os.environ.get('SMTP_EMAIL', 'noreplyemail042@gmail.com'),
-    'SENDER_PASSWORD': os.environ.get('SMTP_PASSWORD', 'wdqu fant pxce xqac'),
-    'SMTP_SERVER': 'smtp.gmail.com',
-    'SMTP_PORT': 465,
+    'SENDGRID_API_KEY': os.environ.get('SENDGRID_API_KEY'),
 }
 
 # AI Configuration (Google Gemini)

@@ -11,6 +11,8 @@ import re
 import string
 import datetime
 import random
+import requests
+import json
 import smtplib
 import ssl
 from email.mime.text import MIMEText
@@ -131,19 +133,16 @@ def generate_otp():
 
 
 def send_otp_email(target_email, otp):
-    """Send OTP email using Gmail SMTP."""
+    """Send OTP email using SendGrid HTTP API (Bypasses Render SMTP blocks)."""
     try:
+        api_key = SMTP_CONFIG['SENDGRID_API_KEY']
         sender_email = SMTP_CONFIG['SENDER_EMAIL']
-        sender_password = SMTP_CONFIG['SENDER_PASSWORD']
         
-        print(f"[DEBUG-MAIL] Attempting to send to {target_email} via {SMTP_CONFIG['SMTP_SERVER']}...")
+        print(f"[SENDGRID] Attempting to send OTP to {target_email}...")
         
-        message = MIMEMultipart("alternative")
-        message["Subject"] = "SearchX Registration - One Time Password (OTP)"
-        message["From"] = f"SearchX Admin <{sender_email}>"
-        message["To"] = target_email
-
-        html = f"""
+        url = "https://api.sendgrid.com/v3/mail/send"
+        
+        html_content = f"""
         <html>
         <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
             <div style="max-width: 600px; margin: auto; background: white; padding: 40px; border-radius: 10px; border: 1px solid #ddd;">
@@ -159,23 +158,38 @@ def send_otp_email(target_email, otp):
         </body>
         </html>
         """
-        message.attach(MIMEText(html, "html"))
 
-        context = ssl.create_default_context()
-        print("[DEBUG-MAIL] Connecting to SMTP Server (Port 587)...")
-        # Use Port 587 with STARTTLS (Alternative for blocked 465)
-        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
-            print("[DEBUG-MAIL] Starting TLS...")
-            server.starttls(context=context)
-            print("[DEBUG-MAIL] Logging in...")
-            server.login(sender_email, sender_password)
-            print("[DEBUG-MAIL] Sending message...")
-            server.sendmail(sender_email, target_email, message.as_string())
-            print("[DEBUG-MAIL] Successfully sent!")
+        payload = {
+            "personalizations": [{
+                "to": [{"email": target_email}]
+            }],
+            "from": {
+                "email": sender_email,
+                "name": "SearchX Admin"
+            },
+            "subject": "SearchX Registration - One Time Password (OTP)",
+            "content": [{
+                "type": "text/html",
+                "value": html_content
+            }]
+        }
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+
+        response = requests.post(url, json=payload, headers=headers)
         
-        return True
+        if response.status_code in [200, 201, 202]:
+            print(f"[SENDGRID] Success! Email sent to {target_email}")
+            return True
+        else:
+            print(f"[SENDGRID] FAILED: {response.status_code} - {response.text}")
+            return False
+            
     except Exception as e:
-        print(f"[DEBUG-MAIL] FAILED: {e}")
+        print(f"[SENDGRID] ERROR: {e}")
         return False
 
 
