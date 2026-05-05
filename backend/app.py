@@ -60,7 +60,7 @@ except ImportError:
 # --- Flask App Setup ---
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 # --- Gemini Setup ---
 genai.configure(api_key=AI_CONFIG['GEMINI_API_KEY'])
