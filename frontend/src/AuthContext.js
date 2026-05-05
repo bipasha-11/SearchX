@@ -2,8 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 var AuthContext = createContext(null);
 
-// Production API Base URL (empty string means relative to current host)
-var API_BASE = process.env.REACT_APP_API_URL || '';
+// Production API Base URL
+var API_BASE = 'https://searchx-backend.onrender.com';
 
 function AuthProvider(props) {
     var userState = useState(null);
@@ -64,7 +64,7 @@ function AuthProvider(props) {
             options.headers['Authorization'] = 'Bearer ' + token;
         }
 
-        return fetch(url, options).then(function (res) {
+        return fetch(API_BASE + url, options).then(function (res) {
             if (res.status === 401) {
                 // Token expired — auto-logout
                 logout();
