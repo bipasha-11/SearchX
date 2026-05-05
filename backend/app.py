@@ -136,12 +136,13 @@ def send_otp_email(target_email, otp):
         sender_email = SMTP_CONFIG['SENDER_EMAIL']
         sender_password = SMTP_CONFIG['SENDER_PASSWORD']
         
+        print(f"[DEBUG-MAIL] Attempting to send to {target_email} via {SMTP_CONFIG['SMTP_SERVER']}...")
+        
         message = MIMEMultipart("alternative")
         message["Subject"] = "SearchX Registration - One Time Password (OTP)"
         message["From"] = f"SearchX Admin <{sender_email}>"
         message["To"] = target_email
 
-        # Premium HTML Template
         html = f"""
         <html>
         <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
@@ -158,17 +159,21 @@ def send_otp_email(target_email, otp):
         </body>
         </html>
         """
-        
         message.attach(MIMEText(html, "html"))
 
         context = ssl.create_default_context()
-        with smtplib.SMTP_SSL(SMTP_CONFIG['SMTP_SERVER'], SMTP_CONFIG['SMTP_PORT'], context=context) as server:
+        print("[DEBUG-MAIL] Connecting to SMTP Server...")
+        # Added timeout of 10 seconds
+        with smtplib.SMTP_SSL(SMTP_CONFIG['SMTP_SERVER'], SMTP_CONFIG['SMTP_PORT'], context=context, timeout=10) as server:
+            print("[DEBUG-MAIL] Logging in...")
             server.login(sender_email, sender_password)
+            print("[DEBUG-MAIL] Sending message...")
             server.sendmail(sender_email, target_email, message.as_string())
+            print("[DEBUG-MAIL] Successfully sent!")
         
         return True
     except Exception as e:
-        print(f"[ERROR] Failed to send email: {e}")
+        print(f"[DEBUG-MAIL] FAILED: {e}")
         return False
 
 
