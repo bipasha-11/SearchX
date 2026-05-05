@@ -23,7 +23,8 @@ from flask import Flask, request, jsonify, g, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
-import oracledb
+import psycopg2
+from psycopg2 import extras
 import bcrypt
 import jwt
 
@@ -264,7 +265,7 @@ def get_stopwords(language_id=1):
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "SELECT word FROM STOPWORDS WHERE language_id = :lang_id",
+            "SELECT word FROM STOPWORDS WHERE language_id = %(lang_id)s",
             {'lang_id': language_id}
         )
         stopwords = set(row[0].lower() for row in cursor.fetchall())
@@ -351,7 +352,7 @@ def register_initiate():
         conn = get_connection()
         cursor = conn.cursor()
         try:
-            cursor.execute("SELECT COUNT(*) FROM USERS WHERE email = :email OR username = :uname", 
+            cursor.execute("SELECT COUNT(*) FROM USERS WHERE email = %(email)s OR username = %(uname)s", 
                          {'email': email, 'uname': username})
             if cursor.fetchone()[0] > 0:
                 return jsonify({'error': 'User already registered with this email/username'}), 409
@@ -367,18 +368,17 @@ def register_initiate():
 
             # Store in PENDING_USERS
             cursor.execute("""
-                MERGE INTO PENDING_USERS p
-                USING (SELECT :email as em from dual) s
-                ON (p.email = s.em)
-                WHEN MATCHED THEN
-                    UPDATE SET username = :uname, password_hash = :phash, full_name = :fname, 
-                               otp = :otp, otp_expiry = :expiry, created_at = SYSDATE
-                WHEN NOT MATCHED THEN
-                    INSERT (email, username, password_hash, full_name, otp, otp_expiry)
-                    VALUES (:email2, :uname2, :phash2, :fname2, :otp2, :expiry2)
+                INSERT INTO PENDING_USERS (email, username, password_hash, full_name, otp, otp_expiry)
+                VALUES (%(email)s, %(uname)s, %(phash)s, %(fname)s, %(otp)s, %(expiry)s)
+                ON CONFLICT (email) DO UPDATE SET
+                    username = EXCLUDED.username,
+                    password_hash = EXCLUDED.password_hash,
+                    full_name = EXCLUDED.full_name,
+                    otp = EXCLUDED.otp,
+                    otp_expiry = EXCLUDED.otp_expiry,
+                    created_at = CURRENT_TIMESTAMP
             """, {
-                'email': email, 'uname': username, 'phash': password_hash, 'fname': full_name, 'otp': otp, 'expiry': otp_expiry,
-                'email2': email, 'uname2': username, 'phash2': password_hash, 'fname2': full_name, 'otp2': otp, 'expiry2': otp_expiry
+                'email': email, 'uname': username, 'phash': password_hash, 'fname': full_name, 'otp': otp, 'expiry': otp_expiry
             })
             conn.commit()
 
@@ -412,7 +412,7 @@ def register_verify():
             # Check OTP
             cursor.execute("""
                 SELECT username, password_hash, full_name, otp, otp_expiry 
-                FROM PENDING_USERS WHERE email = :email
+                FROM PENDING_USERS WHERE email = %(email)s
             """, {'email': email})
             row = cursor.fetchone()
 
@@ -429,14 +429,17 @@ def register_verify():
                  return jsonify({'error': 'OTP has expired'}), 401
 
             # Complete Registration
-            user_id_var = cursor.var(oracledb.NUMBER)
-            cursor.callproc('PROC_REGISTER_USER', [
-                username, email, password_hash, full_name, user_id_var
-            ])
-            user_id = int(user_id_var.getvalue())
+            cursor.execute("""
+                INSERT INTO USERS (username, email, password_hash, full_name)
+                VALUES (%(username)s, %(email)s, %(phash)s, %(full_name)s)
+                RETURNING user_id
+            """, {
+                'username': username, 'email': email, 'phash': password_hash, 'full_name': full_name
+            })
+            user_id = cursor.fetchone()[0]
             
             # Delete from pending
-            cursor.execute("DELETE FROM PENDING_USERS WHERE email = :email", {'email': email})
+            cursor.execute("DELETE FROM PENDING_USERS WHERE email = %(email)s", {'email': email})
             
             conn.commit()
 
@@ -487,7 +490,7 @@ def login():
         try:
             print(f"[DEBUG] Login attempt for username: '{username}'")
             cursor.execute(
-                "SELECT user_id, username, email, password_hash, full_name FROM USERS WHERE LOWER(username) = LOWER(:uname)",
+                "SELECT user_id, username, email, password_hash, full_name FROM USERS WHERE LOWER(username) = LOWER(%(uname)s)",
                 {'uname': username}
             )
             row = cursor.fetchone()
@@ -542,7 +545,7 @@ def get_current_user():
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "SELECT user_id, username, email, full_name, created_at FROM USERS WHERE user_id = :u_id",
+            "SELECT user_id, username, email, full_name, created_at FROM USERS WHERE user_id = %(u_id)s",
             {'u_id': g.user_id}
         )
         row = cursor.fetchone()
@@ -575,7 +578,7 @@ def health_check():
     try:
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT 1 FROM DUAL")
+        cursor.execute("SELECT 1")
         cursor.close()
         conn.close()
         return jsonify({'status': 'ok', 'database': 'connected'}), 200
@@ -705,28 +708,34 @@ def upload_document():
             # 1. Generate Summary with Gemini
             summary = generate_document_summary(text, title)
 
-            # 2. Insert document using PROC_ADD_DOCUMENT
-            doc_id_var = cursor.var(oracledb.NUMBER)
-            cursor.callproc('PROC_ADD_DOCUMENT', [
-                title, file_name, content_length,
-                type_id, language_id, category, jurisdiction,
-                summary, file_data, mime_type, doc_id_var
-            ])
-            doc_id = int(doc_id_var.getvalue())
-
-            # 3. Set owner_id for the document
-            cursor.execute(
-                "UPDATE DOCUMENTS SET owner_id = :user_id WHERE doc_id = :did",
-                {'user_id': g.user_id, 'did': doc_id}
-            )
+            # 2. Insert document
+            cursor.execute("""
+                INSERT INTO DOCUMENTS (
+                    title, file_name, content_length, file_type_id, language_id, 
+                    category, jurisdiction, summary, file_data, mime_type, owner_id
+                ) VALUES (
+                    %(title)s, %(file_name)s, %(content_length)s, %(file_type_id)s, %(language_id)s,
+                    %(category)s, %(jurisdiction)s, %(summary)s, %(file_data)s, %(mime_type)s, %(owner_id)s
+                ) RETURNING doc_id
+            """, {
+                'title': title, 'file_name': file_name, 'content_length': content_length,
+                'file_type_id': type_id, 'language_id': language_id, 'category': category,
+                'jurisdiction': jurisdiction, 'summary': summary, 'file_data': file_data,
+                'mime_type': mime_type, 'owner_id': g.user_id
+            })
+            doc_id = cursor.fetchone()[0]
 
             # 3. Tokenize and index
             stopwords = get_stopwords(language_id)
             term_freq = tokenize(text, stopwords)
 
             for term, freq in term_freq.items():
-                if len(term) <= 500:  # VARCHAR2(500) limit
-                    cursor.callproc('PROC_INDEX_TERM', [term, doc_id, freq])
+                if len(term) <= 500:
+                    cursor.execute("""
+                        INSERT INTO INVERTED_INDEX (word, doc_id, frequency)
+                        VALUES (%(word)s, %(doc_id)s, %(freq)s)
+                        ON CONFLICT (word, doc_id) DO UPDATE SET frequency = EXCLUDED.frequency
+                    """, {'word': term, 'doc_id': doc_id, 'freq': freq})
 
             conn.commit()
 
@@ -766,16 +775,14 @@ def search_documents():
     cursor = conn.cursor()
 
     try:
-        # Log the query (same as stored procedure logic)
+        # Log the query
         cursor.execute("""
-            MERGE INTO QUERY_LOG ql
-            USING (SELECT LOWER(:keyword) AS st FROM DUAL) src
-            ON (ql.search_term = src.st)
-            WHEN MATCHED THEN
-                UPDATE SET ql.search_count = ql.search_count + 1, ql.last_searched = SYSDATE
-            WHEN NOT MATCHED THEN
-                INSERT (search_term, search_count, last_searched) VALUES (LOWER(:keyword2), 1, SYSDATE)
-        """, {'keyword': keyword, 'keyword2': keyword})
+            INSERT INTO QUERY_LOGS (search_term, search_count, last_searched)
+            VALUES (LOWER(%(keyword)s), 1, CURRENT_TIMESTAMP)
+            ON CONFLICT (search_term) DO UPDATE SET
+                search_count = QUERY_LOGS.search_count + 1,
+                last_searched = CURRENT_TIMESTAMP
+        """, {'keyword': keyword})
         conn.commit()
 
         # Search for the stemmed version of the keyword
@@ -789,17 +796,12 @@ def search_documents():
                    d.jurisdiction,
                    d.content_length,
                    d.summary,
-                   d.created_at,
-                   dt.type_name,
-                   l.language_name,
+                   d.upload_date as created_at,
                    ii.frequency AS relevance_score
             FROM INVERTED_INDEX ii
-            JOIN TERMS t       ON t.term_id   = ii.term_id
             JOIN DOCUMENTS d   ON d.doc_id    = ii.doc_id
-            JOIN DOCUMENT_TYPE dt ON dt.type_id = d.type_id
-            JOIN LANGUAGE l    ON l.language_id = d.language_id
-            WHERE (LOWER(t.term_text) = :stemmed OR LOWER(t.term_text) LIKE :partial)
-              AND (d.owner_id = :user_id OR d.owner_id IS NULL)
+            WHERE (LOWER(ii.word) = %(stemmed)s OR LOWER(ii.word) LIKE %(partial)s)
+              AND (d.owner_id = %(user_id)s OR d.owner_id IS NULL)
             ORDER BY ii.frequency DESC
         """, {
             'stemmed': stemmed_keyword,

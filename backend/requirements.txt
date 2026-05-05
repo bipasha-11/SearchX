@@ -1,6 +1,6 @@
 flask==2.3.3
 flask-cors==4.0.0
-oracledb==1.4.2
+psycopg2-binary
 PyPDF2==3.0.1
 python-docx==1.1.0
 werkzeug==2.3.7
