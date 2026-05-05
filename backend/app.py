@@ -226,7 +226,9 @@ def generate_document_summary(text, title="legal document"):
             return f"This document titled '{title}' contains legal provisions and obligations. A detailed AI summary was unavailable due to content filtering, but the full text is indexed for search."
 
     except Exception as e:
-        print(f"[ERROR] Gemini Summarization Failed: {e}")
+        print(f"[ERROR] Gemini Summarization Failed for '{title}': {str(e)}")
+        import traceback
+        traceback.print_exc()
         # Meaningful fallback instead of 'could not be generated'
         return f"This is a legal document titled '{title}'. It has been successfully processed and indexed for keyword retrieval."
 
@@ -872,9 +874,9 @@ def get_analytics():
         # Top searched terms (global — queries are shared)
         cursor.execute(
             "SELECT search_term, search_count, last_searched "
-            "FROM (SELECT search_term, search_count, last_searched "
-            "FROM QUERY_LOG ORDER BY search_count DESC) "
-            "WHERE ROWNUM <= :lim",
+            "FROM QUERY_LOGS "
+            "ORDER BY search_count DESC "
+            "LIMIT %(lim)s",
             {'lim': limit}
         )
         rows = cursor.fetchall()
@@ -889,23 +891,22 @@ def get_analytics():
 
         # Additional stats — scoped to user's documents
         cursor.execute(
-            "SELECT COUNT(*) FROM DOCUMENTS WHERE owner_id = :user_id OR owner_id IS NULL",
+            "SELECT COUNT(*) FROM DOCUMENTS WHERE owner_id = %(user_id)s OR owner_id IS NULL",
             {'user_id': g.user_id}
         )
         total_docs = cursor.fetchone()[0]
 
         cursor.execute("""
-            SELECT COUNT(DISTINCT t.term_id) FROM TERMS t
-            JOIN INVERTED_INDEX ii ON ii.term_id = t.term_id
+            SELECT COUNT(DISTINCT ii.word) FROM INVERTED_INDEX ii
             JOIN DOCUMENTS d ON d.doc_id = ii.doc_id
-            WHERE d.owner_id = :user_id OR d.owner_id IS NULL
+            WHERE d.owner_id = %(user_id)s OR d.owner_id IS NULL
         """, {'user_id': g.user_id})
         total_terms = cursor.fetchone()[0]
 
-        cursor.execute("SELECT COUNT(*) FROM QUERY_LOG")
+        cursor.execute("SELECT COUNT(*) FROM QUERY_LOGS")
         total_queries = cursor.fetchone()[0]
 
-        cursor.execute("SELECT NVL(SUM(search_count), 0) FROM QUERY_LOG")
+        cursor.execute("SELECT COALESCE(SUM(search_count), 0) FROM QUERY_LOGS")
         total_searches = cursor.fetchone()[0]
 
         return jsonify({
@@ -936,14 +937,11 @@ def get_documents():
         cursor.execute("""
             SELECT d.doc_id, d.title, d.file_name, d.content_length, d.summary,
                    d.created_at, d.category, d.jurisdiction,
-                   dt.type_name, l.language_name,
-                   NVL(ds.total_terms, 0) AS total_terms,
-                   NVL(ds.unique_terms, 0) AS unique_terms
+                   dt.type_name, l.language_name
             FROM DOCUMENTS d
-            JOIN DOCUMENT_TYPE dt ON dt.type_id = d.type_id
+            JOIN DOCUMENT_TYPE dt ON dt.type_id = d.file_type_id
             JOIN LANGUAGE l ON l.language_id = d.language_id
-            LEFT JOIN DOCUMENT_STATS ds ON ds.doc_id = d.doc_id
-            WHERE d.owner_id = :user_id OR d.owner_id IS NULL
+            WHERE d.owner_id = %(user_id)s OR d.owner_id IS NULL
             ORDER BY d.created_at DESC
         """, {'user_id': g.user_id})
         rows = cursor.fetchall()
@@ -960,9 +958,7 @@ def get_documents():
                 'category': row[6],
                 'jurisdiction': row[7],
                 'type_name': row[8],
-                'language_name': row[9],
-                'total_terms': row[10],
-                'unique_terms': row[11]
+                'language_name': row[9]
             })
 
         return jsonify({'documents': documents, 'count': len(documents)}), 200
@@ -981,7 +977,7 @@ def view_document(doc_id):
     conn = get_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT file_name, file_data, mime_type FROM DOCUMENTS WHERE doc_id = :did", {'did': doc_id})
+        cursor.execute("SELECT file_name, file_data, mime_type FROM DOCUMENTS WHERE doc_id = %(did)s", {'did': doc_id})
         row = cursor.fetchone()
         if not row:
             return jsonify({'error': 'Document ID not found in database'}), 404
