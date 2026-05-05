@@ -1,0 +1,9 @@
+EMPLOYMENT CONTRACT - STANDARD
+----------------------------
+This Employment Contract is made on April 4, 2024, between THE_EMPLOYER and THE_EMPLOYEE.
+1. POSITION: The Employee will serve as a Legal Technology Analyst.
+2. SALARY: The Employee will be paid INR 1,200,000 per annum, payable monthly.
+3. TERM: This is a full-time, at-will employment relationship.
+4. NOTICE: Either party may terminate with 60 days of written notice.
+5. GOVERNANCE: This is governed by the Labor Acts of India.
+Signed: ____________________

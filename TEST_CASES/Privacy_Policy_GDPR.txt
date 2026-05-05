@@ -1,0 +1,9 @@
+PRIVACY POLICY - GDPR COMPLIANT
+-------------------------------
+This Privacy Policy outlines the collection, storage, and processing of personal data.
+1. DATA CONTROLLER: LEGAL_TECH_CORP is the data controller.
+2. CONSENT: Users must explicitly provide consent for data processing.
+3. RIGHTS: Data subjects have the right to access, rectify, and erase their personal data.
+4. BREACH: Data breaches must be reported to the Supervisory Authority within 72 hours.
+5. GOVERNANCE: Compliant with the General Data Protection Regulation (EU) 2016/679.
+Signed: ____________________

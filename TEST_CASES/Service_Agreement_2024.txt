@@ -1,0 +1,8 @@
+SERVICE AGREEMENT 2024
+----------------------
+This Service Agreement ("Agreement") is made on April 5, 2024, between LEGAL_TECH_CORP ("Provider") and THE_CLIENT ("Client").
+1. SERVICES: Provider shall perform document indexing services as described in Exhibit A.
+2. PAYMENT: Client shall pay Provider $500.00 USD per month for the duration of this Agreement.
+3. CONFIDENTIALITY: Both parties agree to maintain the confidentiality of all proprietary legal data.
+4. JURISDICTION: This Agreement is governed by the laws of the State of New York.
+Signed: ____________________

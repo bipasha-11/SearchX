@@ -1,0 +1,10 @@
+SUPREME COURT JUDGMENT: RE_2023
+-------------------------------
+CASE: Union of India vs. ABC Corp
+CITATION: 2023 SCC 456
+JUDGMENT DATE: October 10, 2023
+BENCH: Justice S. Kumar, Justice R. Patel
+ISSUE: Whether the arbitration agreement was valid in the absence of signature.
+RULING: The Court held that a signature is not mandatory if the intent to arbitrate is clear.
+JUDGMENT: Appeal dismissed. Arbitration proceedings affirmed.
+Signed: ____________________
