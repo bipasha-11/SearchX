@@ -2,6 +2,8 @@
 
 **SearchX** is a production-grade Search Engine Indexing and Query Analytics system specifically designed for legal corpora. It enables legal professionals to upload, index, and perform high-relevance searches across complex legal documents including contracts, case summaries, and policies.
 
+### 🌐 [Live Demo](https://search-x-five.vercel.app/) | ⚙️ [Backend API](https://searchx-backend.onrender.com)
+
 ![Stack](https://img.shields.io/badge/Stack-React_|_Flask_|_PostgreSQL-blue)
 ![AI](https://img.shields.io/badge/AI-Google_Gemini_Summarization-orange)
 ![Mail](https://img.shields.io/badge/Mail-SendGrid_API-green)
