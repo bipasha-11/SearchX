@@ -11,14 +11,25 @@
 
 ## 🖼️ Visual Preview
 
-### 🖥️ Dashboard & Search Execution
-| Landing Page | Search Results (AI Summaries) |
+### 🖥️ Core Platform
+| Home Page | Search Execution |
 | :---: | :---: |
-| ![Landing](https://raw.githubusercontent.com/bipasha-11/SearchX/main/screenshots/landing.png) | ![Search](https://raw.githubusercontent.com/bipasha-11/SearchX/main/screenshots/search_results.png) |
+| ![Home](https://raw.githubusercontent.com/bipasha-11/SearchX/main/screenshots/home%20page.png) | ![Search](https://raw.githubusercontent.com/bipasha-11/SearchX/main/screenshots/search.png) |
 
-| Analytics Overview | My Documents Management |
+### 📊 Management & Analytics
+| Dashboard Overview | Search Analytics |
 | :---: | :---: |
-| ![Analytics](https://raw.githubusercontent.com/bipasha-11/SearchX/main/screenshots/analytics.png) | ![Dashboard](https://raw.githubusercontent.com/bipasha-11/SearchX/main/screenshots/dashboard.png) |
+| ![Dashboard](https://raw.githubusercontent.com/bipasha-11/SearchX/main/screenshots/dashboard.png) | ![Analytics](https://raw.githubusercontent.com/bipasha-11/SearchX/main/screenshots/search%20analytics.png) |
+
+### 📂 Document & Upload Flow
+| Upload Page | My Documents List |
+| :---: | :---: |
+| ![Upload](https://raw.githubusercontent.com/bipasha-11/SearchX/main/screenshots/upload%20page.png) | ![Documents](https://raw.githubusercontent.com/bipasha-11/SearchX/main/screenshots/uploaded%20documents.png) |
+
+### 🔐 Authentication
+| Sign In | Create Account |
+| :---: | :---: |
+| ![Sign In](https://raw.githubusercontent.com/bipasha-11/SearchX/main/screenshots/sign%20in.png) | ![Create Account](https://raw.githubusercontent.com/bipasha-11/SearchX/main/screenshots/create%20account.png) |
 
 ---
 
