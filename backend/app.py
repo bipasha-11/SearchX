@@ -920,6 +920,8 @@ def get_analytics():
         }), 200
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': f'Analytics failed: {str(e)}'}), 500
     finally:
         cursor.close()
@@ -964,6 +966,8 @@ def get_documents():
         return jsonify({'documents': documents, 'count': len(documents)}), 200
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
     finally:
         cursor.close()
