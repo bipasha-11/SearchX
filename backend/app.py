@@ -15,6 +15,7 @@ import smtplib
 import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import threading
 from functools import wraps
 
 import google.generativeai as genai
@@ -362,9 +363,9 @@ def register_initiate():
             otp_expiry = datetime.datetime.now() + datetime.timedelta(minutes=10)
             password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-            # Send Email
-            if not send_otp_email(email, otp):
-                return jsonify({'error': 'Failed to send OTP email. Please check configuration.'}), 500
+            # Send Email in Background (Prevents Render Worker Timeout)
+            email_thread = threading.Thread(target=send_otp_email, args=(email, otp))
+            email_thread.start()
 
             # Store in PENDING_USERS
             cursor.execute("""
