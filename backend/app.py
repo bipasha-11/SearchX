@@ -162,9 +162,11 @@ def send_otp_email(target_email, otp):
         message.attach(MIMEText(html, "html"))
 
         context = ssl.create_default_context()
-        print("[DEBUG-MAIL] Connecting to SMTP Server...")
-        # Added timeout of 10 seconds
-        with smtplib.SMTP_SSL(SMTP_CONFIG['SMTP_SERVER'], SMTP_CONFIG['SMTP_PORT'], context=context, timeout=10) as server:
+        print("[DEBUG-MAIL] Connecting to SMTP Server (Port 587)...")
+        # Use Port 587 with STARTTLS (Alternative for blocked 465)
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
+            print("[DEBUG-MAIL] Starting TLS...")
+            server.starttls(context=context)
             print("[DEBUG-MAIL] Logging in...")
             server.login(sender_email, sender_password)
             print("[DEBUG-MAIL] Sending message...")
