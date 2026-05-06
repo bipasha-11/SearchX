@@ -38,7 +38,7 @@ SMTP_CONFIG = {
 
 # AI Configuration (Google Gemini)
 AI_CONFIG = {
-    'GEMINI_API_KEY': os.environ.get('GEMINI_API_KEY', 'AIzaSyDMCHsXU5YYQWumP_RMgVqvkNmCY6UqeUs'),
+    'GEMINI_API_KEY': os.environ.get('GEMINI_API_KEY'),
     'MODEL_NAME': 'gemini-flash-latest',
 }
 
