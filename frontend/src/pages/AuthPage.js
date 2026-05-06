@@ -210,15 +210,15 @@ function AuthPage() {
 
                         <div className="auth-brand-features">
                             <div className="auth-brand-feature">
-                                <span className="auth-brand-feature-icon">🔒</span>
+                                <span className="auth-brand-feature-icon"></span>
                                 <span>Secure & Private</span>
                             </div>
                             <div className="auth-brand-feature">
-                                <span className="auth-brand-feature-icon">📄</span>
+                                <span className="auth-brand-feature-icon"></span>
                                 <span>Your Documents, Only Yours</span>
                             </div>
                             <div className="auth-brand-feature">
-                                <span className="auth-brand-feature-icon">⚡</span>
+                                <span className="auth-brand-feature-icon"></span>
                                 <span>Oracle 11g Powered</span>
                             </div>
                         </div>
@@ -253,7 +253,7 @@ function AuthPage() {
 
                         {error && (
                             <div className="auth-error" id="auth-error">
-                                <span className="auth-error-icon">⚠</span>
+                                <span className="auth-error-icon"></span>
                                 {error}
                             </div>
                         )}
@@ -265,7 +265,7 @@ function AuthPage() {
                                         Username
                                     </label>
                                     <div className="auth-input-wrapper">
-                                        <span className="auth-input-icon">👤</span>
+                                        <span className="auth-input-icon"></span>
                                         <input
                                             type="text"
                                             id="login-username"
@@ -284,7 +284,7 @@ function AuthPage() {
                                         Password
                                     </label>
                                     <div className="auth-input-wrapper">
-                                        <span className="auth-input-icon">🔑</span>
+                                        <span className="auth-input-icon"></span>
                                         <input
                                             type={showPassword ? 'text' : 'password'}
                                             id="login-password"
@@ -300,7 +300,7 @@ function AuthPage() {
                                             onClick={function () { setShowPassword(!showPassword); }}
                                             tabIndex={-1}
                                         >
-                                            {showPassword ? '🙈' : '👁'}
+                                            {showPassword ? 'Hide' : 'Show'}
                                         </button>
                                     </div>
                                 </div>
@@ -343,7 +343,7 @@ function AuthPage() {
                                                 Full Name
                                             </label>
                                             <div className="auth-input-wrapper">
-                                                <span className="auth-input-icon">✏️</span>
+                                                <span className="auth-input-icon"></span>
                                                 <input
                                                     type="text"
                                                     id="reg-fullname"
@@ -362,7 +362,7 @@ function AuthPage() {
                                                     Username
                                                 </label>
                                                 <div className="auth-input-wrapper">
-                                                    <span className="auth-input-icon">👤</span>
+                                                    <span className="auth-input-icon"></span>
                                                     <input
                                                         type="text"
                                                         id="reg-username"
@@ -380,7 +380,7 @@ function AuthPage() {
                                                     Email
                                                 </label>
                                                 <div className="auth-input-wrapper">
-                                                    <span className="auth-input-icon">📧</span>
+                                                    <span className="auth-input-icon"></span>
                                                     <input
                                                         type="email"
                                                         id="reg-email"
@@ -400,7 +400,7 @@ function AuthPage() {
                                                     Password
                                                 </label>
                                                 <div className="auth-input-wrapper">
-                                                    <span className="auth-input-icon">🔑</span>
+                                                    <span className="auth-input-icon"></span>
                                                     <input
                                                         type={showPassword ? 'text' : 'password'}
                                                         id="reg-password"
@@ -418,7 +418,7 @@ function AuthPage() {
                                                     Confirm Password
                                                 </label>
                                                 <div className="auth-input-wrapper">
-                                                    <span className="auth-input-icon">🔑</span>
+                                                    <span className="auth-input-icon"></span>
                                                     <input
                                                         type={showPassword ? 'text' : 'password'}
                                                         id="reg-confirm"
@@ -455,7 +455,7 @@ function AuthPage() {
                                             We've sent a 6-digit code to your email.
                                         </p>
                                         <div className="auth-input-wrapper">
-                                            <span className="auth-input-icon">💬</span>
+                                            <span className="auth-input-icon"></span>
                                             <input
                                                 type="text"
                                                 id="reg-otp"
