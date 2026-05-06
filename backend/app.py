@@ -799,14 +799,14 @@ def search_documents():
     cursor = conn.cursor()
 
     try:
-        # Log the query
+        # Log the query (user-specific)
         cursor.execute("""
-            INSERT INTO QUERY_LOGS (search_term, search_count, last_searched)
-            VALUES (LOWER(%(keyword)s), 1, CURRENT_TIMESTAMP)
-            ON CONFLICT (search_term) DO UPDATE SET
+            INSERT INTO QUERY_LOGS (search_term, user_id, search_count, last_searched)
+            VALUES (LOWER(%(keyword)s), %(user_id)s, 1, CURRENT_TIMESTAMP)
+            ON CONFLICT (search_term, user_id) DO UPDATE SET
                 search_count = QUERY_LOGS.search_count + 1,
                 last_searched = CURRENT_TIMESTAMP
-        """, {'keyword': keyword})
+        """, {'keyword': keyword, 'user_id': g.user_id})
         conn.commit()
 
         # Search for the stemmed version of the keyword
@@ -871,13 +871,14 @@ def get_analytics():
     cursor = conn.cursor()
 
     try:
-        # Top searched terms (global — queries are shared)
+        # Top searched terms (user-specific)
         cursor.execute(
             "SELECT search_term, search_count, last_searched "
             "FROM QUERY_LOGS "
+            "WHERE user_id = %(user_id)s "
             "ORDER BY search_count DESC "
             "LIMIT %(lim)s",
-            {'lim': limit}
+            {'lim': limit, 'user_id': g.user_id}
         )
         rows = cursor.fetchall()
 
@@ -903,10 +904,10 @@ def get_analytics():
         """, {'user_id': g.user_id})
         total_terms = cursor.fetchone()[0]
 
-        cursor.execute("SELECT COUNT(*) FROM QUERY_LOGS")
+        cursor.execute("SELECT COUNT(*) FROM QUERY_LOGS WHERE user_id = %(user_id)s", {'user_id': g.user_id})
         total_queries = cursor.fetchone()[0]
 
-        cursor.execute("SELECT COALESCE(SUM(search_count), 0) FROM QUERY_LOGS")
+        cursor.execute("SELECT COALESCE(SUM(search_count), 0) FROM QUERY_LOGS WHERE user_id = %(user_id)s", {'user_id': g.user_id})
         total_searches = cursor.fetchone()[0]
 
         return jsonify({

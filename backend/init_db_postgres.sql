@@ -48,11 +48,13 @@ CREATE TABLE IF NOT EXISTS INVERTED_INDEX (
     PRIMARY KEY (word, doc_id)
 );
 
--- Search Query Logs
+-- Search Query Logs (User-specific)
 CREATE TABLE IF NOT EXISTS QUERY_LOGS (
-    search_term VARCHAR(255) PRIMARY KEY,
+    search_term VARCHAR(255) NOT NULL,
+    user_id INTEGER REFERENCES USERS(user_id) ON DELETE CASCADE,
     search_count INTEGER DEFAULT 1,
-    last_searched TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    last_searched TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (search_term, user_id)
 );
 
 -- Stopwords Table
